@@ -46,6 +46,20 @@ name: resource_level2
 Parent Dropdown: resource_level1
 dddx Group: resource_levels  
 
+Example 3 (with custom processors for gallery-albums):
+ 
+Create 2 dynamic_dropdown-TVs:
+
+name: album0
+Parent Dropdown:
+dddx Group: gallery_albums 
+
+name: album1
+Parent Dropdown: album0
+dddx Group: gallery_albums     
+
+
+
 Note: create all dropdown-TVs from up to down!
 
 To work correctly, each dropdown needs to know all its parents and childs.
