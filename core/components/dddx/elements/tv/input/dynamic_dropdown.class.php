@@ -16,6 +16,9 @@ class modTemplateVarInputRenderDddx extends modTemplateVarInputRender {
         $this->dddx = new Dddx($this->modx,$params);
         $this->dddx->loadConfigs();
         */
+        $path = 'components/dddx/';
+        $corePath = $this->modx->getOption('dddx.core_path', null, $this->modx->getOption('core_path') . $path);        
+        
         $namespace = 'dddx';
         $this->modx->lexicon->load('tv_widget', $namespace . ':default');
         
@@ -30,7 +33,7 @@ class modTemplateVarInputRenderDddx extends modTemplateVarInputRender {
         
         $dddx_processor = 'getoptions.'.$dddx_id;
         $default_processor = 'getoptions.default';
-        
+       
         $action = file_exists($corePath.'processors/'.$actionPath.$dddx_processor.'.php') ? $actionPath.$dddx_processor : $actionPath.$default_processor;
                 
         $this->setPlaceholder('resource', $resource);
