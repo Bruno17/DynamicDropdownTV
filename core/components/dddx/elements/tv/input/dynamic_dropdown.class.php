@@ -33,9 +33,9 @@ class modTemplateVarInputRenderDddx extends modTemplateVarInputRender {
         
         $dddx_processor = 'getoptions.'.$dddx_id;
         $default_processor = 'getoptions.default';
-       
+        
         $action = file_exists($corePath.'processors/'.$actionPath.$dddx_processor.'.php') ? $actionPath.$dddx_processor : $actionPath.$default_processor;
-                
+        
         $this->setPlaceholder('resource', $resource);
         $this->setPlaceholder('object_id', $this->modx->getOption('object_id',$_REQUEST,''));        
         $this->setPlaceholder('params', $params);

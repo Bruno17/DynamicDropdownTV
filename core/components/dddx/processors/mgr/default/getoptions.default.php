@@ -9,9 +9,9 @@ $firstText = $modx->getOption('firstText', $inputProperties, '-- choose one --')
 $where = $modx->getOption('where', $inputProperties, '');
 
 $sps = $scriptProperties;
-foreach ($sps as $key => $sp){
-    if ($sp == ''){
-        $scriptProperties[$key] = '999999999999999';    
+foreach ($sps as $key => $sp) {
+    if ($sp == '') {
+        $scriptProperties[$key] = '999999999999999';
     }
 }
 
@@ -23,7 +23,24 @@ if (!empty($where)) {
 
 }
 
-$classname = 'modResource';
+$classname = $modx->getOption('classname', $inputProperties, '');
+$classname = empty($classname) ? 'modResource' : $classname;
+
+$idfield = $modx->getOption('idfield', $inputProperties, '');
+$idfield = empty($idfield) ? 'id' : $idfield;
+
+$namefield = $modx->getOption('namefield', $inputProperties, '');
+$namefield = empty($namefield) ? 'pagetitle' : $namefield;
+
+$packageName = $modx->getOption('packagename', $inputProperties, '');
+
+if (!empty($packageName)) {
+    $packagepath = $modx->getOption('core_path') . 'components/' . $packageName . '/';
+    $modelpath = $packagepath . 'model/';
+
+    $modx->addPackage($packageName, $modelpath, $prefix);
+}
+
 $c = $modx->newQuery($classname);
 
 if (!empty($where)) {
@@ -32,7 +49,7 @@ if (!empty($where)) {
 
 $options = array();
 if (!empty($query)) {
-    $c->where(array('pagetitle:LIKE' => $query . '%'));
+    $c->where(array($namefield . ':LIKE' => $query . '%'));
 } else {
     $options[] = array('id' => '', 'name' => $firstText);
 }
@@ -40,8 +57,8 @@ if (!empty($query)) {
 //$c->prepare();echo $c->toSql();
 if ($collection = $modx->getCollection($classname, $c)) {
     foreach ($collection as $object) {
-        $option['id'] = $object->get('id');
-        $option['name'] = $object->get('pagetitle');
+        $option['id'] = $object->get($idfield);
+        $option['name'] = $object->get($namefield);
         $rows[strtolower($option['name'])] = $option;
     }
     ksort($rows);

@@ -156,6 +156,42 @@ MODx.load({
         ,listeners: oc
     },{
         xtype: 'textfield'
+        ,fieldLabel: 'packagename'
+        ,description: '{/literal}{$mig.packagename_desc}{literal}'
+        ,name: 'inopt_packagename'
+        ,id: 'inopt_packagename{/literal}{$tv}{literal}'
+        ,value: params['packagename']
+        ,anchor: '100%'
+        ,listeners: oc
+    },{
+        xtype: 'textfield'
+        ,fieldLabel: 'classname'
+        ,description: '{/literal}{$mig.classname_desc}{literal}'
+        ,name: 'inopt_classname'
+        ,id: 'inopt_classname{/literal}{$tv}{literal}'
+        ,value: params['classname']
+        ,anchor: '100%'
+        ,listeners: oc
+    },{
+        xtype: 'textfield'
+        ,fieldLabel: 'idfield'
+        ,description: '{/literal}{$mig.idfield_desc}{literal}'
+        ,name: 'inopt_idfield'
+        ,id: 'inopt_idfield{/literal}{$tv}{literal}'
+        ,value: params['idfield']
+        ,anchor: '100%'
+        ,listeners: oc
+    },{
+        xtype: 'textfield'
+        ,fieldLabel: 'namefield'
+        ,description: '{/literal}{$mig.namefield_desc}{literal}'
+        ,name: 'inopt_namefield'
+        ,id: 'inopt_namefield{/literal}{$tv}{literal}'
+        ,value: params['namefield']
+        ,anchor: '100%'
+        ,listeners: oc
+    },{
+        xtype: 'textfield'
         ,fieldLabel: '{/literal}{$dddx.childs}({$dddx.readonly}){literal}'
         ,description: '{/literal}{$dddx.childs_desc}{literal}'
         ,name: 'inopt_childs'
