@@ -14,4 +14,6 @@ $_lang['dddx.group'] = 'dddx Group';
 $_lang['dddx.parent'] = 'Parent Dropdown';
 $_lang['dddx.readonly'] = 'readonly';
 $_lang['dddx.firstText'] = 'first row text';
+$_lang['dddx.clearOnRefresh'] = 'clear on refresh';
+$_lang['dddx.valueDelimiter'] = 'Delimiter';
 

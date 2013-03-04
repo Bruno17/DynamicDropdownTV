@@ -34,7 +34,7 @@ switch ($modx->event->name) {
             $inputProperties = $tv->get('input_properties');
             // get all dynamic_dropdown-TVs
             $c = $modx->newQuery('modTemplateVar');
-            $c->where(array('type' => 'dynamic_dropdown'));
+            $c->where(array('type:LIKE' => 'dynamic_dropdown%'));
             $dtvs = $modx->getCollection('modTemplateVar', $c);
 
             foreach ($dtvs as $key => $dtv) {

@@ -13,10 +13,12 @@ MODx.combo.{/literal}{$dddx_id}{literal} = function(config) {
     config = config || {};
     Ext.applyIf(config,{{/literal}
         name: '{$dddx_id}'
+        ,triggerAction: 'all'
         ,id: 'select_{$dddx_id}'
         ,width: 400
         ,hiddenName: 'tv{$tv->id}'
         ,renderTo: 'div_{$dddx_id}'
+        ,mode: 'remote'
         ,children: Ext.util.JSON.decode('{$children}')
         ,parents: Ext.util.JSON.decode('{$parents}')          
         {if $params.title},title: '{$params.title}'{/if}
@@ -42,42 +44,71 @@ MODx.combo.{/literal}{$dddx_id}{literal} = function(config) {
         ,fields: ['id','name']
         ,displayField: 'name'
         ,valueField: 'id'
+        {if $params.valueDelimiter}
+            ,valueDelimiter: '{$params.valueDelimiter}'
+        {/if}        
+        ,clearOnRefresh: {if $params.clearOnRefresh == 1 || $params.clearOnRefresh == 'true'}true{else}false{/if} 
         {literal}
         ,baseParams: {
 		    action: '{/literal}{$action}{literal}'
             ,resource_id: '{/literal}{$resource.id}{literal}' 
             ,object_id : '{/literal}{$object_id}{literal}'
             ,tvname : '{/literal}{{$tv->name}}{literal}' 	 	            
-        },listeners: { 
+        }
+        ,store: new Ext.data.JsonStore({
+                        id:'id',
+                        autoLoad: true,
+                        root:'results',
+                        fields: ['name', 'id'],
+                        remoteSort: true,
+                        url: MODx.config.assets_url+'components/dddx/connector.php',
+                        baseParams:{
+                            action: '{/literal}{$action}{literal}'
+                            ,resource_id: '{/literal}{$resource.id}{literal}' 
+                            ,object_id : '{/literal}{$object_id}{literal}'
+                            ,tvname : '{/literal}{{$tv->name}}{literal}' 	                            
+                        },
+                        listeners: {
+                            'load': {fn:function(store, records, options ) {
+                                //this.hiddenName = config.paramHiddenName;
+                                //this.setWidth('350');
+                                }
+                            },scope : this                        
+                        }   
+                    }) 
+        
+        ,listeners: { 
 		    'select': {fn:this.selectOption,scope:this}
             ,'render': {fn:this.initSelect,scope:this}
 		}
     });
     MODx.combo.{/literal}{$dddx_id}{literal}.superclass.constructor.call(this,config);
 };
-Ext.extend(MODx.combo.{/literal}{$dddx_id}{literal},MODx.combo.ComboBox,{
+Ext.extend(MODx.combo.{/literal}{$dddx_id}{literal},Ext.ux.form.SuperBoxSelect,{
 	selectOption: function() {
         this.refreshChildren(true);
         MODx.fireResourceFormChange();	         
         
 	}
     ,reload: function() {
+        console.log(this);
         this.store.load({
             callback: function() {
-                this.setValue('');
+                if (this.clearOnRefresh){
+                    this.setValue('');
+                }
                 this.refreshChildren(true);
             },scope:this
        });
+       
 	}
     ,refreshChildren: function(reload) {
         var dddx_select = null;
         for(i = 0; i <  this.children.length; i++) {
  		    child = this.children[i];
             dddx_select = Ext.getCmp('select_'+child);
-            //console.log(dddx_select);
             if(typeof(dddx_select) != "undefined"){
                 dddx_select.baseParams.{/literal}{$dddx_id}{literal} = this.getValue();
-                dddx_select.store.baseParams.{/literal}{$dddx_id}{literal} = this.getValue();
                 if (reload){
                     dddx_select.reload();
                 }
@@ -90,7 +121,7 @@ Ext.extend(MODx.combo.{/literal}{$dddx_id}{literal},MODx.combo.ComboBox,{
  		    parent = this.parents[i];
             parent_field = Ext.get('original'+parent);
             if (parent_field){
-                this.baseParams[parent] = parent_field.dom.value;
+                this.store.baseParams[parent] = parent_field.dom.value;
             }
         }
         this.store.load({

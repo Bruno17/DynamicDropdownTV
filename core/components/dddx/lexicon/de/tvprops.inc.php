@@ -14,3 +14,5 @@ $_lang['dddx.group'] = 'dddx Gruppe';
 $_lang['dddx.parent'] = 'Übergeordnetes Dropdown';
 $_lang['dddx.readonly'] = 'nur Lesen';
 $_lang['dddx.firstText'] = 'erste Reihe Text';
+$_lang['dddx.clearOnRefresh'] = 'bei Aktualisierung leeren'; 
+$_lang['dddx.valueDelimiter'] = 'Trennzeichen';
