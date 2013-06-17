@@ -72,7 +72,7 @@ Tab | Option | Value
 General Information | Name | dynamic0
 Input Options | Input Type | Dynamic Dropdown
 Input Options | Dynamic Dropdown Group | dynamicGroup
-Input Options | Input Option Values | `TEST1==1||TEST2==2`
+Input Options | Input Option Values | TEST1==1&#124;&#124;TEST2==2
 
 #### Second
 
@@ -81,7 +81,7 @@ Tab | Option | Value
 General Information | Name | dynamic1
 Input Options | Input Type | Dynamic Dropdown
 Input Options | Dynamic Dropdown Group | dynamicGroup
-Input Options | Input Option Values | `1::TEST1a==1a&#124;&#124;TEST1a==1a##2::TEST2b==2b&#124;&#124;TEST2b==2b`
+Input Options | Input Option Values | 1::TEST1a==1a&#124;&#124;TEST1a==1a##2::TEST2b==2b&#124;&#124;TEST2b==2b
 
 The names `dynamicX` and `dynamicGroup` are just examples and could be changed.
 
