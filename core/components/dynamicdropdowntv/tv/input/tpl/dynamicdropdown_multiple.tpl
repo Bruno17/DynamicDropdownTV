@@ -61,7 +61,7 @@ MODx.combo.{/literal}{$ddId}{literal} = function(config) {
                         root:'results',
                         fields: ['name', 'id'],
                         remoteSort: true,
-                        url: {$connector_path},
+                        url: {/literal}{$connector_path}{literal},
                         baseParams:{
                             action: '{/literal}{$action}{literal}'
                             ,resource_id: '{/literal}{$resource.id}{literal}' 
