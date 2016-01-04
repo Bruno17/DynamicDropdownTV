@@ -21,9 +21,14 @@
  * @package dynamicdropdowntv
  * @subpackage processor
  *
- * DynamicDropdownTV getoptions default processor
+ * DynamicDropdownTV example gallery albums processor for albums0 tv
  */
+ 
+//@EVAL return $modx->runSnippet('list.lister', array('useid'=>'1', 'class'=>'productColorGroups','nameField'=>'colorgroupname')); 
+ 
 $query = $modx->getOption('query', $scriptProperties, '');
+$group_id = $modx->getOption('productgroups',$scriptProperties,0);
+$line_id = $modx->getOption('productlines',$scriptProperties,0);
 
 $tv = $modx->getObject('modTemplateVar', array('name' => $scriptProperties['tvname']));
 $inputProperties = $tv->get('input_properties');
@@ -32,55 +37,34 @@ $modx->lexicon->load('tv_widget', 'dynamicdropdowntv:inputoptions');
 $lang = $modx->lexicon->fetch('dynamicdropdowntv.', TRUE);
 
 $firstText = $modx->getOption('firstText', $inputProperties, $lang['firstText_default'], TRUE);
-$where = $modx->getOption('where', $inputProperties, '');
 
-foreach ($scriptProperties as $key => $scriptProperty) {
-	if ($scriptProperty == '') {
-		$scriptProperty[$key] = '999999999999999';
-	}
-}
+$packageName = 'rhythmcatalog';
+$packagepath = $modx->getOption('core_path') . 'components/' . $packageName . '/';
+$modelpath = $packagepath . 'model/';
+$modx->addPackage($packageName, $modelpath);
 
-if (!empty($where)) {
-	$chunk = $modx->newObject('modChunk');
-	$chunk->setCacheable(false);
-	$chunk->setContent($where);
-	$where = $chunk->process($scriptProperties);
-}
-
-$classname = $modx->getOption('classname', $inputProperties, 'modResource', TRUE);
-$idfield = $modx->getOption('idfield', $inputProperties, 'id', TRUE);
-$namefield = $modx->getOption('namefield', $inputProperties, 'pagetitle', TRUE);
-$packageName = $modx->getOption('packagename', $inputProperties, '');
-$prefix = $modx->getOption('prefix', $inputProperties, '');
-$prefix = empty($prefix) ? null : $prefix;
-
-if (!empty($packageName)) {
-	$packagepath = $modx->getOption('core_path') . 'components/' . $packageName . '/';
-	$modelpath = $packagepath . 'model/';
-	$modx->addPackage($packageName, $modelpath, $prefix);
-}
-
+$classname = 'productColorGroup';//here I'm not sure which class you want select from, 
 $c = $modx->newQuery($classname);
 
-if (!empty($where)) {
-	$c->where($modx->fromJson($where));
-}
+//may be you will need to join here to some other table, needs to be figured out
 
 $options = array();
 $count = 1;
 
 if (!empty($query)) {
-	$c->where(array($namefield . ':LIKE' => $query . '%'));
+	$c->where(array('colorgroupname:LIKE' => $query . '%'));
 } else {
 	$options[] = array('id' => '', 'name' => $firstText);
 }
 
-//$c->prepare();die($c->toSql());
+$c->where(array('cg_id' => $group_id));//this needs to be figured out
+
+//$c->prepare();echo $c->toSql();
 if ($collection = $modx->getCollection($classname, $c)) {
 	$count += $modx->getCount($classname);
 	foreach ($collection as $object) {
-		$option['id'] = $object->get($idfield);
-		$option['name'] = $object->get($namefield);
+		$option['id'] = $object->get('id');
+		$option['name'] = $object->get('colorgroupname');
 		$rows[strtolower($option['name'])] = $option;
 	}
 	ksort($rows);

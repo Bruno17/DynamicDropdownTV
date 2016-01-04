@@ -8,7 +8,7 @@ Features
 With this MODX Revolution custom template variable related dropdown template
 variables could be used. Each dynamic dropdown template variable could have one
 or more child dynamic dropdown template variables which are updated on selection
-of the parent dynamic dropdown template variable.
+of the parent dynamic dropdown template variable. 
 
 Installation
 --------------------------------------------------------------------------------
@@ -159,7 +159,7 @@ First
 
 Tab                 | Option                 | Value
 ------------------- | ---------------------- | ----------------
-General Information | Name                   | album0
+General Information | Name                   | albums0
 Input Options       | Input Type             | Dynamic Dropdown
 Input Options       | Parent Dropdown        |
 Input Options       | Dynamic Dropdown Group | gallery_albums
@@ -168,16 +168,16 @@ Input Options       | Dynamic Dropdown Group | gallery_albums
 
 Tab                 | Option                 | Value
 ------------------- | ---------------------- | ----------------
-General Information | Name                   | album1
+General Information | Name                   | albums1
 Input Options       | Input Type             | Dynamic Dropdown
-Input Options       | Parent Dropdown        | album0
+Input Options       | Parent Dropdown        | albums0
 Input Options       | Dynamic Dropdown Group | gallery_albums
 
 This example will also add two dropdown select TVs, where you can choose MODX
-gallery albums. After selecting a gallery album in the first TV album0, the
-dropdown select of the second TV album1 will show the child albums of this
-album. If you select again a album in the first TV album0 the child of this
-Dynamic Dropdown TV (album1) will be resetted.
+gallery albums. After selecting a gallery album in the first TV albums0, the
+dropdown select of the second TV albums1 will show the child albums of this
+album. If you select again a album in the first TV albums0 the child of this
+Dynamic Dropdown TV (albums1) will be resetted.
 
 Notes
 --------------------------------------------------------------------------------

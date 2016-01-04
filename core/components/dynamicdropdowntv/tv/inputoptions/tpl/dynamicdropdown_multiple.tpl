@@ -208,6 +208,20 @@ MODx.load({
 			,cls: 'desc-under'
 		},{
 			xtype: 'textfield'
+			,fieldLabel: '{/literal}{$dynamicdropdowntv.prefix}{literal}'
+			,description: MODx.expandHelp ? '' : '{/literal}{$dynamicdropdowntv.prefix_desc}{literal}'
+			,name: 'inopt_prefix'
+			,id: 'inopt_prefix{/literal}{$tv}{literal}'
+			,value: params['prefix']
+			,anchor: '100%'
+			,listeners: oc
+		},{
+			xtype: MODx.expandHelp ? 'label' : 'hidden'
+			,forId: 'inopt_prefix{/literal}{$tv}{literal}'
+			,html: '{/literal}{$dynamicdropdowntv.prefix_desc}{literal}'
+			,cls: 'desc-under'
+		},{
+			xtype: 'textfield'
 			,fieldLabel: '{/literal}{$dynamicdropdowntv.classname}{literal}'
 			,description: MODx.expandHelp ? '' : '{/literal}{$dynamicdropdowntv.classname_desc}{literal}'
 			,name: 'inopt_classname'

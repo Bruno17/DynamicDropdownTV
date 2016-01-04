@@ -1,0 +1,76 @@
+[
+  {
+    "id":31,
+    "source":0,
+    "property_preprocess":false,
+    "name":"DynamicDropdownTV",
+    "description":"Tell MODX to check these directories for DynamicDropdownTV files and save parents and childrens of DynamicDropdownTVs to the TV options.",
+    "editor_type":0,
+    "category":0,
+    "cache_type":0,
+    "locked":false,
+    "properties":null,
+    "disabled":false,
+    "moduleguid":"",
+    "static":false,
+    "static_file":"",
+    "plugin_events":[
+      {
+        "pluginid":"DynamicDropdownTV",
+        "event":"OnManagerPageBeforeRender",
+        "priority":0,
+        "propertyset":0,
+        "name":"OnManagerPageBeforeRender",
+        "service":2,
+        "groupname":"System"
+      },
+      {
+        "pluginid":"DynamicDropdownTV",
+        "event":"OnTVFormSave",
+        "priority":0,
+        "propertyset":0,
+        "name":"OnTVFormSave",
+        "service":1,
+        "groupname":"Template Variables"
+      },
+      {
+        "pluginid":"DynamicDropdownTV",
+        "event":"OnTVInputPropertiesList",
+        "priority":0,
+        "propertyset":0,
+        "name":"OnTVInputPropertiesList",
+        "service":1,
+        "groupname":"Template Variables"
+      },
+      {
+        "pluginid":"DynamicDropdownTV",
+        "event":"OnTVInputRenderList",
+        "priority":0,
+        "propertyset":0,
+        "name":"OnTVInputRenderList",
+        "service":1,
+        "groupname":"Template Variables"
+      },
+      {
+        "pluginid":"DynamicDropdownTV",
+        "event":"OnTVOutputRenderList",
+        "priority":0,
+        "propertyset":0,
+        "name":"OnTVOutputRenderList",
+        "service":1,
+        "groupname":"Template Variables"
+      },
+      {
+        "pluginid":"DynamicDropdownTV",
+        "event":"OnTVOutputRenderPropertiesList",
+        "priority":0,
+        "propertyset":0,
+        "name":"OnTVOutputRenderPropertiesList",
+        "service":1,
+        "groupname":"Template Variables"
+      }
+    ],
+    "filename":"dynamicdropdowntv.plugin.php",
+    "category_name":"DynamicDropdownTV"
+  }
+]

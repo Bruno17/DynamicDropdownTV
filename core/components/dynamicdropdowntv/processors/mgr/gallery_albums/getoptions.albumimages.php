@@ -1,0 +1,63 @@
+<?php
+
+/**
+ * DynamicDropdownTV
+ *
+ * Copyright 2012-2013 by Bruno Perner <b.perner@gmx.de>
+ *
+ * DynamicDropdownTV is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation; either version 2 of the License, or (at your option) any
+ * later version.
+ *
+ * DynamicDropdownTV is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * DynamicDropdownTV; if not, write to the Free Software Foundation, Inc., 59
+ * Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+ * @package dynamicdropdowntv
+ * @subpackage processor
+ *
+ * DynamicDropdownTV example gallery albums processor for albums1 tv
+ */
+$album = $modx->getOption('albums', $scriptProperties, '');
+$query = $modx->getOption('query', $scriptProperties, '');
+
+$tv = $modx->getObject('modTemplateVar', array('name' => $scriptProperties['tvname']));
+$inputProperties = $tv->get('input_properties');
+
+$modx->lexicon->load('tv_widget', 'dynamicdropdowntv:inputoptions');
+$lang = $modx->lexicon->fetch('dynamicdropdowntv.', true);
+
+$firstText = $modx->getOption('firstText', $inputProperties, $lang['firstText_default'], true);
+
+$modx->resource = $modx->newObject('modResource');//we $modx->resource to get phpthumbof working
+
+$options = array();
+$count = 1;
+
+//$c->where(array('parent' => $parent));
+
+//$c->prepare();echo $c->toSql();
+$output = $firstText . '==';
+$output .= $modx->runSnippet('Gallery', array('album' => $album, 'thumbTpl' => 'TVGalThumb'));
+
+$images = explode('||', $output);
+$rows = array();
+foreach ($images as $image) {
+    $parts = explode('==', $image);
+    $option['id'] = $parts[1];
+    $option['name'] = $parts[0];
+    $rows[strtolower($option['id'])] = $option;
+}
+ksort($rows);
+
+foreach ($rows as $option) {
+    $options[] = $option;
+}
+
+return $this->outputArray($options, $count);
