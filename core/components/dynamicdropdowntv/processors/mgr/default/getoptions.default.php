@@ -76,7 +76,7 @@ if (!empty($query)) {
 }
 
 //$c->prepare();die($c->toSql());
-if ($collection = $modx->getCollection($classname, $c)) {
+if ($collection = $modx->getIterator($classname, $c)) {
 	$count += $modx->getCount($classname);
 	foreach ($collection as $object) {
 		$option['id'] = $object->get($idfield);
