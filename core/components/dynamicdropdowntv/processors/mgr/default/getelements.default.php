@@ -37,7 +37,55 @@ $firstText = $modx->getOption('firstText', $inputProperties, $lang['firstText_de
 $elementValues = array();
 $elements = explode('##', $elements);
 foreach ($elements as $element) {
-	$element = explode('::', trim($element));
+    // Check for any binding in element string
+    $regex = '/(.*)@(\w+)\W+(\w.+)/';
+
+    if(preg_match($regex,$element,$mtch)) {    
+        $prefix = $mtch[1];
+        $type = $mtch[2]; //binding type
+        $val = $mtch[3]; //binding value string
+        $el;
+        
+        switch($type) {
+            case 'CHUNK':
+                $el = $modx->parseChunk($val,array());
+                break;
+            case 'FILE':
+                $el = file_get_contents($modx->config['base_path'] . $val);
+                break;        
+            case 'SELECT':
+                $sql = 'SELECT '. $val;
+
+                $c = new xPDOCriteria($modx,$sql); // connect to the MODX DB
+                $rows = array();
+                if ($c->stmt && $c->stmt->execute())
+                {
+                    while ($row = $c->stmt->fetch(PDO::FETCH_ASSOC))
+                    {
+                        if(count($row) > 1) {
+                            $rows[] = $row['name']."==".$row['id'];    
+                        } else {
+                            $rows[] = $row['id'];
+                        }
+                    }
+                    $el = implode('||',$rows);
+                    break;
+                }
+                break;
+            /*
+            case 'INLINE':
+                $chunk = $modx->newObject('modChunk');
+                $chunk->setCacheable(false);
+                $elements = $chunk->process();
+                break;
+            */    
+            default:
+                break;
+        }
+        $element = $prefix . $el;
+    }
+ 
+    $element = explode('::', trim($element));
 	if (count($element) > 1) {
 		$key = trim($element[0]);
 		$values = explode('||', $element[1]);
