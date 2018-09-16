@@ -92,6 +92,15 @@ The format for the input option values is:
 
 Creating a new line after the `##` is allowed.
 
+##### @bindings
+
+You can also use `@CHUNK`, `@SELECT` or `@FILE` bindings in the Input Option Values. 
+Example for the first dropdown:
+`@CHUNK my_random_chunk_with_key_value_pairs`
+
+For the child dropdown, you can combine multiple variants:
+`Parentvalue1::@CHUNK key_values_for_Parentvalue1##Parentvalue2::plain==1||text==2||..##Parentvalue3::@SELECT name,id FROM mytable`
+
 ### Example 3: Individual processor usage
 
 Create three Dynamic Dropdown template variables:
