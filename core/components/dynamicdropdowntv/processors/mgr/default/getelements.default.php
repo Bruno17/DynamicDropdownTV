@@ -97,14 +97,32 @@ foreach ($elements as $element) {
 }
 
 $parent = $modx->getOption('parent', $inputProperties, '');
-$parentValue = ($scriptProperties[$parent] != '') ? $scriptProperties[$parent] : '#ROOT#';
-$elementValues = isset($elementValues[$parentValue]) ? $elementValues[$parentValue] : array();
+$parentValue = (isset($scriptProperties[$parent]) && $scriptProperties[$parent] != '') ? $scriptProperties[$parent] : '#ROOT#';
+$parentValue = ($parentValue == '#ROOT#') ? '#ROOT#' : explode('||', $parentValue);
+
+if($parentValue != '#ROOT#' && count($parentValue) >= 1) {
+    $elementValues = array_intersect_key( $elementValues, array_flip( $parentValue ) );  //filter the array with parent key
+} else {
+    $elementValues = isset($elementValues[$parentValue]) ? $elementValues[$parentValue] : array();
+}
 
 $options = array();
 $count = 1;
 $rows = array();
 
 $options[] = array('id' => '', 'name' => $firstText);
+
+$flat = array();
+foreach($elementValues as $val) {
+    if(is_array($val)) {
+        foreach($val as $v) {
+            $flat[] = $v;
+        }
+    } else {
+        $flat[] = $val;
+    }
+}
+$elementValues = $flat;
 
 $count += count($elementValues);
 foreach ($elementValues as $elementValue) {

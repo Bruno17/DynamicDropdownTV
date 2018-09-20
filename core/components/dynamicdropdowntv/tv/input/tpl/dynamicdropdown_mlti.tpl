@@ -76,7 +76,7 @@ MODx.combo.{/literal}{$ddId}{literal} = function(config) {
         
         ,listeners: { 
 		    'select': {fn:this.selectOption,scope:this}
-            ,'additem': {fn:this.selectOption,scope:this}
+            ,'change': {fn:this.selectOption,scope:this}
             ,'removeitem': {fn:this.selectOption,scope:this}
             ,'render': {fn:this.initSelect,scope:this}
 		}
@@ -85,9 +85,7 @@ MODx.combo.{/literal}{$ddId}{literal} = function(config) {
 };
 Ext.extend(MODx.combo.{/literal}{$ddId}{literal},Ext.ux.form.SuperBoxSelect,{
 	selectOption: function() {
-        if(this.children.length >= 1 && typeof(Ext.getCmp('select_'+this.children[0])) != "undefined") {
-            this.refreshChildren(true);
-        } 
+        this.refreshChildren(true);
         MODx.fireResourceFormChange();	         
 	}
     ,reload: function() {
@@ -106,7 +104,7 @@ Ext.extend(MODx.combo.{/literal}{$ddId}{literal},Ext.ux.form.SuperBoxSelect,{
  		    child = this.children[i];
             ddSelect = Ext.getCmp('select_'+child);
             if(typeof(ddSelect) != "undefined"){
-                ddSelect.baseParams.{/literal}{$ddId}{literal} = this.getValue();
+                ddSelect.store.baseParams.{/literal}{$ddId}{literal} = this.getValue();
                 if (reload){
                     ddSelect.reload();
                 }
