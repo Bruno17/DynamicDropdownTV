@@ -48,6 +48,7 @@ MODx.combo.{/literal}{$ddId}{literal} = function(config) {
         ,valueField: 'id'
         {if $params.valueDelimiter}
             ,valueDelimiter: '{$params.valueDelimiter}'
+            ,queryValuesDelimiter: '{$params.valueDelimiter}'
         {/if}        
         ,clearOnRefresh: {if $params.clearOnRefresh == 1 || $params.clearOnRefresh == 'true'}true{else}false{/if} 
         {literal}
@@ -70,7 +71,12 @@ MODx.combo.{/literal}{$ddId}{literal} = function(config) {
                             action: '{/literal}{$action}{literal}'
                             ,resource_id: '{/literal}{$resource.id}{literal}' 
                             ,object_id : '{/literal}{$object_id}{literal}'
-                            ,tvname : '{/literal}{{$tv->name}}{literal}' 	                            
+                            ,tvname : '{/literal}{{$tv->name}}{literal}'
+                            {/literal}
+                                {if $params.valueDelimiter}
+                                    ,valueDelimiter: '{$params.valueDelimiter}',
+                                {/if}
+                            {literal}
                         }
                     }) 
         
@@ -123,7 +129,7 @@ Ext.extend(MODx.combo.{/literal}{$ddId}{literal},Ext.ux.form.SuperBoxSelect,{
         var original_values = Ext.get('{/literal}original{$ddId}{literal}').dom.value;
         this.setValue(original_values);
         
-        // Separate store .. won't fire ever
+        // .. won't fire ever
         this.store.load({
             callback: function() {
                 this.setValue(Ext.get('{/literal}original{$ddId}{literal}').dom.value);

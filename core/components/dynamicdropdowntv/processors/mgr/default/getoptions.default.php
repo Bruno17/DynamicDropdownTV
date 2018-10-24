@@ -53,6 +53,7 @@ $namefield = $modx->getOption('namefield', $inputProperties, 'pagetitle', TRUE);
 $packageName = $modx->getOption('packagename', $inputProperties, '');
 $prefix = $modx->getOption('prefix', $inputProperties, '');
 $prefix = empty($prefix) ? null : $prefix;
+$delimiter = $modx->getOption('valueDelimiter', $inputProperties, '||');
 
 if (!empty($packageName)) {
 	$packagepath = $modx->getOption('core_path') . 'components/' . $packageName . '/';
@@ -70,7 +71,17 @@ $options = array();
 $count = 1;
 
 if (!empty($query)) {
-	$c->where(array($namefield . ':LIKE' => $query . '%'));
+    $qry = explode($delimiter, $query);
+    $num = true;
+    foreach($qry as $t) {
+        $num = ($num && is_numeric($t));
+    }
+
+    if($num) {
+        $c->where(array($idfield . ':IN' => $qry) );
+    } else {
+        $c->where(array($namefield . ':LIKE' => $query . '%'));
+    }
 } else {
 	$options[] = array('id' => '', 'name' => $firstText);
 }
