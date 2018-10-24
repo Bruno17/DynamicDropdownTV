@@ -37,7 +37,55 @@ $firstText = $modx->getOption('firstText', $inputProperties, $lang['firstText_de
 $elementValues = array();
 $elements = explode('##', $elements);
 foreach ($elements as $element) {
-	$element = explode('::', trim($element));
+    // Check for any binding in element string
+    $regex = '/(.*)@(\w+)\W+(\w.+)/';
+
+    if(preg_match($regex,$element,$mtch)) {    
+        $prefix = $mtch[1];
+        $type = $mtch[2]; //binding type
+        $val = $mtch[3]; //binding value string
+        $el;
+        
+        switch($type) {
+            case 'CHUNK':
+                $el = $modx->parseChunk($val,array());
+                break;
+            case 'FILE':
+                $el = file_get_contents($modx->config['base_path'] . $val);
+                break;        
+            case 'SELECT':
+                $sql = 'SELECT '. $val;
+
+                $c = new xPDOCriteria($modx,$sql); // connect to the MODX DB
+                $rows = array();
+                if ($c->stmt && $c->stmt->execute())
+                {
+                    while ($row = $c->stmt->fetch(PDO::FETCH_ASSOC))
+                    {
+                        if(count($row) > 1) {
+                            $rows[] = $row['name']."==".$row['id'];    
+                        } else {
+                            $rows[] = $row['id'];
+                        }
+                    }
+                    $el = implode('||',$rows);
+                    break;
+                }
+                break;
+            /*
+            case 'INLINE':
+                $chunk = $modx->newObject('modChunk');
+                $chunk->setCacheable(false);
+                $elements = $chunk->process();
+                break;
+            */    
+            default:
+                break;
+        }
+        $element = $prefix . $el;
+    }
+ 
+    $element = explode('::', trim($element));
 	if (count($element) > 1) {
 		$key = trim($element[0]);
 		$values = explode('||', $element[1]);
@@ -49,14 +97,32 @@ foreach ($elements as $element) {
 }
 
 $parent = $modx->getOption('parent', $inputProperties, '');
-$parentValue = ($scriptProperties[$parent] != '') ? $scriptProperties[$parent] : '#ROOT#';
-$elementValues = isset($elementValues[$parentValue]) ? $elementValues[$parentValue] : array();
+$parentValue = (isset($scriptProperties[$parent]) && $scriptProperties[$parent] != '') ? $scriptProperties[$parent] : '#ROOT#';
+$parentValue = ($parentValue == '#ROOT#') ? '#ROOT#' : explode('||', $parentValue);
+
+if($parentValue != '#ROOT#' && count($parentValue) >= 1) {
+    $elementValues = array_intersect_key( $elementValues, array_flip( $parentValue ) );  //filter the array with parent key
+} else {
+    $elementValues = isset($elementValues[$parentValue]) ? $elementValues[$parentValue] : array();
+}
 
 $options = array();
 $count = 1;
 $rows = array();
 
 $options[] = array('id' => '', 'name' => $firstText);
+
+$flat = array();
+foreach($elementValues as $val) {
+    if(is_array($val)) {
+        foreach($val as $v) {
+            $flat[] = $v;
+        }
+    } else {
+        $flat[] = $val;
+    }
+}
+$elementValues = $flat;
 
 $count += count($elementValues);
 foreach ($elementValues as $elementValue) {

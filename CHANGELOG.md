@@ -1,5 +1,9 @@
 Changelog
 ================================================================================
+- 1.3.1
+    - Added support for @-bindings (@CHUNK, @FILE, @SELECT) in Input Options Values field
+    
+- 1.3.0
 
 - 1.2
     - Checked/rewritten documentation

@@ -87,12 +87,22 @@ Input Options       | Input Option Values    | 1::TEST1a==1a||TEST1a==1a##2::TES
 
 The names `dynamicX` and `dynamicGroup` are just examples and could be changed.
 
-This example will add two dropdown select TVs, where you can different values. After selecting a value in the first TV dynamic0, the dropdown select of the second TV dynamic1 will show related values. If you select again a value in the first TV dynamic0 all children of this Dynamic Dropdown TV (dynamic1) will be reseted.
+This example will add two dropdown select TVs, where you can select different values. After selecting a value in the first TV dynamic0, the dropdown select of the second TV dynamic1 will show related values. If you select again a value in the first TV dynamic0 all children of this Dynamic Dropdown TV (dynamic1) will be reseted.
 
 The format for the input option values is:
 `Parentvalue::Key==Value||…||Key==Value##Parentvalue::Key==Value||…||Key==Value`
 
 Creating a new line after the `##` is allowed.
+
+####@bindings
+
+You can also use `@CHUNK`, `@SELECT` or `@FILE` bindings in the Input Option Values. 
+Example for the first dropdown:
+`@CHUNK my_random_chunk_with_key_value_pairs`
+
+For the child dropdown, you can combine multiple variants:
+`Parentvalue1::@CHUNK key_values_for_Parentvalue1##Parentvalue2::plain==1||text==2||..##Parentvalue3::@SELECT name,id FROM mytable`
+
 
 Example 3: Individual processor usage
 ················································································
