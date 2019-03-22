@@ -28,6 +28,7 @@ $query = $modx->getOption('query', $scriptProperties, '');
 $tv = $modx->getObject('modTemplateVar', array('name' => $scriptProperties['tvname']));
 $inputProperties = $tv->get('input_properties');
 $elements = $tv->get('elements');
+$elements = $tv->processBindings($elements, (int) $scriptProperties['resource_id']);
 
 $modx->lexicon->load('tv_widget', 'dynamicdropdowntv:inputoptions');
 $lang = $modx->lexicon->fetch('dynamicdropdowntv.', TRUE);
