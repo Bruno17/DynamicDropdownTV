@@ -25,17 +25,21 @@
  */
 $query = $modx->getOption('query', $scriptProperties, '');
 
-$tv = $modx->getObject('modTemplateVar', array('name' => $scriptProperties['tvname']));
+$tv = $modx->getObject('modTemplateVar', array('name' => $scriptProperties['tvname'] ?? ''));
+if (!$tv) {
+	return $this->outputArray(array(), 0);
+}
 $inputProperties = $tv->get('input_properties');
+if (!is_array($inputProperties)) { $inputProperties = array(); }
 $elements = $tv->get('elements');
 
 $modx->lexicon->load('tv_widget', 'dynamicdropdowntv:inputoptions');
 $lang = $modx->lexicon->fetch('dynamicdropdowntv.', TRUE);
 
-$firstText = $modx->getOption('firstText', $inputProperties, $lang['firstText_default'], TRUE);
+$firstText = $modx->getOption('firstText', $inputProperties, isset($lang['firstText_default']) ? $lang['firstText_default'] : '', TRUE);
 
 $elementValues = array();
-$elements = explode('##', $elements);
+$elements = explode('##', (string)$elements);
 foreach ($elements as $element) {
 	$element = explode('::', trim($element));
 	if (count($element) > 1) {
@@ -49,7 +53,7 @@ foreach ($elements as $element) {
 }
 
 $parent = $modx->getOption('parent', $inputProperties, '');
-$parentValue = ($scriptProperties[$parent] != '') ? $scriptProperties[$parent] : '#ROOT#';
+$parentValue = (isset($scriptProperties[$parent]) && $scriptProperties[$parent] !== '') ? $scriptProperties[$parent] : '#ROOT#';
 $elementValues = isset($elementValues[$parentValue]) ? $elementValues[$parentValue] : array();
 
 $options = array();
@@ -61,13 +65,14 @@ $options[] = array('id' => '', 'name' => $firstText);
 $count += count($elementValues);
 foreach ($elementValues as $elementValue) {
 	$elementValue = explode('==', $elementValue, 2);
+	$option = array();
 	$option['name'] = $elementValue[0];
 	if (count($elementValue) == 1) {
 		$option['id'] = $elementValue[0];
 	} else {
 		$option['id'] = $elementValue[1];
 	}
-	$rows[strtolower($option['name'])] = $option;
+	$rows[strtolower((string)$option['name'])] = $option;
 }
 ksort($rows);
 

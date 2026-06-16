@@ -55,11 +55,12 @@ switch ($modx->event->name) {
 	case 'OnManagerPageBeforeRender':
 		break;
 	case 'OnTVFormSave':
+		if (!isset($scriptProperties['tv'])) break;
 		$tv = &$scriptProperties['tv'];
 		$tvName = $tv->get('name');
-		$tvType = $tv->get('type');
+		$tvType = (string)$tv->get('type');
 		if ($tvType == 'dynamicdropdown' || $tvType == 'dynamicdropdown_multiple') {
-			$tvInputProperties = $tv->get('input_properties');
+			$tvInputProperties = $tv->get('input_properties') ?? array();
 			// get all DynamicDropdownTVs
 			$c = $modx->newQuery('modTemplateVar');
 			$c->where(array('type:LIKE' => 'dynamicdropdown%'));
@@ -67,10 +68,12 @@ switch ($modx->event->name) {
 
 			$ddTvArr = array();
 			foreach ($ddTvs as $key => $ddTv) {
-				$ddTvInputProperties = $ddTv->get('input_properties');
+				$ddTvInputProperties = $ddTv->get('input_properties') ?? array();
 				// work only with them in the same dd-group
-				if ($ddTvInputProperties['group'] == $tvInputProperties['group']) {
+				if (isset($ddTvInputProperties['group']) && isset($tvInputProperties['group'])
+					&& $ddTvInputProperties['group'] == $tvInputProperties['group']) {
 					$ddTvArr[$ddTv->get('name')]['properties'] = $ddTv->get('input_properties');
+					$ddTvArr[$ddTv->get('name')]['childs'] = array();
 				} else {
 					unset($ddTvs[$key]);
 				}
@@ -78,19 +81,20 @@ switch ($modx->event->name) {
 			$ddTvResult = $ddTvArr;
 			foreach ($ddTvArr as $tvName => $ddTv) {
 				$ddTvInputProperties = $ddTv['properties'];
-				$ddTvResult = ddSetParentChilds($tvName, $ddTvInputProperties['parent'], $ddTvResult);
+				$parentName = isset($ddTvInputProperties['parent']) ? $ddTvInputProperties['parent'] : '';
+				$ddTvResult = ddSetParentChilds($tvName, $parentName, $ddTvResult);
 			}
 			$ddTvArr = $ddTvResult;
 			foreach ($ddTvArr as $tvName => $ddTv) {
 				$ddTvInputProperties = $ddTv['properties'];
-				if (count($ddTv['childs'] > 0)) {
+				if (!empty($ddTv['childs']) && count($ddTv['childs']) > 0) {
 					foreach ($ddTv['childs'] as $child) {
 						$ddTvResult[$child]['parents'][$tvName] = $tvName;
 					}
 				}
 			}
 			foreach ($ddTvs as $key => $ddTv) {
-				$ddTvInputProperties = $ddTv->get('input_properties');
+				$ddTvInputProperties = $ddTv->get('input_properties') ?? array();
 				$ddTvInputProperties['childs'] = isset($ddTvResult[$ddTv->get('name')]['childs']) ? implode(',', $ddTvResult[$ddTv->get('name')]['childs']) : '';
 				$ddTvInputProperties['parents'] = isset($ddTvResult[$ddTv->get('name')]['parents']) ? implode(',', $ddTvResult[$ddTv->get('name')]['parents']) : '';
 				$ddTv->set('input_properties', $ddTvInputProperties);

@@ -1,3 +1,48 @@
+DynamicDropdownTV — Custom dual-compat build by João Nogueira from original release 1.3.0 by Bruno Perner
+==========================================================================================================
+
+This is a maintenance fork of the original DynamicDropdownTV extra by
+Bruno Perner. It refreshes the codebase for modern PHP and MODX:
+
+- PHP 8.x compatibility — every undefined-array-key access path was
+  guarded, the inverted count() parenthesis bug in OnTVFormSave was
+  fixed, and the $scriptProperty[$key] mutation bug in the default
+  getoptions processor was rewritten to write to $scriptProperties
+  instead.
+
+- MODX 3 compatibility — replaced the removed $modx->toJson() /
+  $modx->fromJson() calls with json_encode() / json_decode() and
+  swapped the deprecated Ext.util.JSON.decode for Ext.decode in the
+  ExtJS templates.
+
+- Defense in depth — the asset connector now requires an authenticated
+  manager session before dispatching the request, matching the policy
+  used by the bundled cttupdater extra.
+
+Original copyright (c) 2012-2013 Bruno Perner, GPL-2.0+.
+Custom dual-compat patches (c) 2026 João Nogueira.
+
+Installation
+------------
+Install from Manager > Extras > Installer > Add New Package > Upload
+Package. Pick the dynamicdropdowntv-x.y.z-pl.transport.zip file.
+The extra registers a plugin (DynamicDropdownTV) bound to the TV
+input/inputoption render-list events and to OnTVFormSave.
+
+Compatibility
+-------------
+- MODX Revolution 2.6+ (manager UI assumes ExtJS-based MODX manager).
+- MODX 3.x.
+- PHP >= 7.4 (tested on PHP 8.5).
+
+Dependencies
+------------
+- MIGX (any current version) must be installed.
+
+
+Original DynamicDropdownTV Documentation by Bruno Perner
+========================================================
+
 DynamicDropdownTV
 ================================================================================
 
@@ -85,14 +130,14 @@ Input Options       | Input Type             | Dynamic Dropdown
 Input Options       | Dynamic Dropdown Group | dynamicGroup
 Input Options       | Input Option Values    | 1::TEST1a==1a||TEST1a==1a##2::TEST2b==2b||TEST2b==2b
 
-The names `dynamicX` and `dynamicGroup` are just examples and could be changed.
+The names dynamicX and dynamicGroup are just examples and could be changed.
 
 This example will add two dropdown select TVs, where you can different values. After selecting a value in the first TV dynamic0, the dropdown select of the second TV dynamic1 will show related values. If you select again a value in the first TV dynamic0 all children of this Dynamic Dropdown TV (dynamic1) will be reseted.
 
 The format for the input option values is:
-`Parentvalue::Key==Value||…||Key==Value##Parentvalue::Key==Value||…||Key==Value`
+Parentvalue::Key==Value||…||Key==Value##Parentvalue::Key==Value||…||Key==Value
 
-Creating a new line after the `##` is allowed.
+Creating a new line after the ## is allowed.
 
 Example 3: Individual processor usage
 ················································································
@@ -164,7 +209,7 @@ Input Options       | Input Type             | Dynamic Dropdown
 Input Options       | Parent Dropdown        |
 Input Options       | Dynamic Dropdown Group | gallery_albums
 
-#### Second
+Second
 
 Tab                 | Option                 | Value
 ------------------- | ---------------------- | ----------------
@@ -189,5 +234,3 @@ Notes
    them in input-properties for each TV after saving the TV.
 3. You can live search in dropdown select options if you set Enable Type-Ahead
    to Yes and set Force Selection to List to Yes.
-
-

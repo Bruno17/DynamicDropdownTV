@@ -19,9 +19,9 @@ MODx.combo.{/literal}{$ddId}{literal} = function(config) {
         ,renderTo: 'div_{$ddId}'
         ,triggerAction: 'all'
         ,mode: 'remote'
-        ,children: Ext.util.JSON.decode('{$children}')
-        ,parents: Ext.util.JSON.decode('{$parents}')          
-        {if $params.title},title: '{$params.title}'{/if}
+        ,children: Ext.decode('{$children}')
+        ,parents: Ext.decode('{$parents}')          
+        {if $params.title},title: '{$params.title|escape:'javascript'}'{/if}
         {if $params.listWidth},listWidth: {$params.listWidth}{/if}
         ,maxHeight: {if $params.maxHeight}{$params.maxHeight}{else}300{/if}
         {if $params.typeAhead}
@@ -33,7 +33,7 @@ MODx.combo.{/literal}{$ddId}{literal} = function(config) {
             ,typeAhead: false
         {/if}
         {if $params.listEmptyText}
-            ,listEmptyText: '{$params.listEmptyText}'
+            ,listEmptyText: '{$params.listEmptyText|escape:'javascript'}'
         {/if}
         ,forceSelection: {if $params.forceSelection && $params.forceSelection != 'false'}true{else}false{/if}
         ,initiated: false
@@ -45,7 +45,7 @@ MODx.combo.{/literal}{$ddId}{literal} = function(config) {
         ,displayField: 'name'
         ,valueField: 'id'
         {if $params.valueDelimiter}
-            ,valueDelimiter: '{$params.valueDelimiter}'
+            ,valueDelimiter: '{$params.valueDelimiter|escape:'javascript'}'
         {/if}        
         ,clearOnRefresh: {if $params.clearOnRefresh == 1 || $params.clearOnRefresh == 'true'}true{else}false{/if} 
         {literal}
@@ -102,11 +102,12 @@ Ext.extend(MODx.combo.{/literal}{$ddId}{literal},Ext.ux.form.SuperBoxSelect,{
 	}
     ,refreshChildren: function(reload) {
         var ddSelect = null;
-        for(i = 0; i <  this.children.length; i++) {
- 		    child = this.children[i];
+        for(var i = 0; i <  this.children.length; i++) {
+ 		    var child = this.children[i];
             ddSelect = Ext.getCmp('select_'+child);
             if(typeof(ddSelect) != "undefined"){
                 ddSelect.baseParams.{/literal}{$ddId}{literal} = this.getValue();
+                ddSelect.store.baseParams.{/literal}{$ddId}{literal} = this.getValue();
                 if (reload){
                     ddSelect.reload();
                 }
@@ -115,13 +116,16 @@ Ext.extend(MODx.combo.{/literal}{$ddId}{literal},Ext.ux.form.SuperBoxSelect,{
 	}    
     ,initSelect: function() {
         var parent_field = null;
-        for(i = 0; i <  this.parents.length; i++) {
- 		    parent = this.parents[i];
+        for(var i = 0; i <  this.parents.length; i++) {
+ 		    var parent = this.parents[i];
             parent_field = Ext.get('original'+parent);
             if (parent_field){
                 this.store.baseParams[parent] = parent_field.dom.value;
             }
         }
+        this.store.on('exception', function() {
+            console.warn('DynamicDropdownTV: Failed to load options');
+        });
         this.store.load({
             callback: function() {
                 this.setValue(Ext.get('{/literal}original{$ddId}{literal}').dom.value);

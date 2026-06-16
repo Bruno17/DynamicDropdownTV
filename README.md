@@ -1,6 +1,28 @@
 DynamicDropdownTV
 ================================================================================
 
+> **Fork notice** — This is a community fork of the original
+> [DynamicDropdownTV](https://github.com/Jako/DynamicDropdownTV) by Bruno Perner
+> (with contributions by Thomas Jakobi), modernized to be **dual-compatible with
+> MODX Revolution 2.x and 3.x** and **PHP 8.x**.
+>
+> **What this fork adds (v1.4.0-pl):**
+> - Dual compatibility: installs and runs unchanged on MODX 2.x and MODX 3.x
+> - Class-based processors (`*.class.php`) — fixes the MODX 3 "Requested
+>   processor not found" failure on dropdown option fetches
+> - Per-TV processor override lookup (prefers `.class.php`, falls back to legacy `.php`)
+> - Processor-level manager authentication gate
+> - MigX form-builder render fix on MODX 3 (Smarty fallback when `$modx->controller` is null)
+> - PHP 8.x hardening and MODX 3 API swaps (`json_encode`/`json_decode`, `Ext.decode`)
+> - Connector requires an authenticated manager session; XSS, path-traversal and
+>   template-injection hardening
+> - Portuguese (`pt`) lexicon
+> - Self-contained dual-compat build system
+>
+> Full history is in `core/components/dynamicdropdowntv/docs/changelog.txt`.
+> All original functionality and the GNU GPL v2 license are preserved.
+> Credit for the original extra belongs to Bruno Perner and Thomas Jakobi.
+
 Dynamic dropdown custom template variable for MODX Revolution.
 
 Features

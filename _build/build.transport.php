@@ -18,10 +18,20 @@
  * DynamicDropdownTV; if not, write to the Free Software Foundation, Inc., 59
  * Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
+ * Dual-compat (MODX 2.x / 3.x) build maintained in this fork by JNogueira.
+ *
+ *
+ * DynamicDropdownTV build script (dual-compat MODX 2.x / 3.x).
+ *
+ * Source elements, processors, TV input types, lexicons and docs are read from
+ * core/components/dynamicdropdowntv/ and assets/components/dynamicdropdowntv/.
+ * This _build/ folder contains build scripts only — no project source code.
+ *
+ * Run from CLI:
+ *   cd <modx>/_build/dynamicdropdowntv/_build && php build.transport.php
+ *
  * @package dynamicdropdowntv
  * @subpackage build
- *
- * DynamicDropdownTV build script
  */
 $mtime = microtime();
 $mtime = explode(' ', $mtime);
@@ -29,46 +39,43 @@ $mtime = $mtime[1] + $mtime[0];
 $tstart = $mtime;
 set_time_limit(0);
 
-/* define package */
-define('PKG_NAME', 'DynamicDropdownTV');
-define('PKG_NAME_LOWER', strtolower(PKG_NAME));
-define('PKG_VERSION', '1.2');
-define('PKG_RELEASE', 'pl');
+require_once 'build.config.php';
 
 /* define sources */
 $root = dirname(dirname(__FILE__)) . '/';
-$sources = array(
-	'root' => $root,
-	'build' => $root . '_build/',
-	'data' => $root . '_build/data/',
-    'events' => $root . '_build/data/events/',
-	'resolvers' => $root . '_build/resolvers/',
-	'properties' => $root . '_build/data/properties/',
-	'permissions' => $root . '_build/data/permissions/',
-	'chunks' => $root . 'core/components/' . PKG_NAME_LOWER . '/elements/chunks/',
-	'snippets' => $root . 'core/components/' . PKG_NAME_LOWER . '/elements/snippets/',
-	'plugins' => $root . 'core/components/' . PKG_NAME_LOWER . '/elements/plugins/',
-	'lexicon' => $root . 'core/components/' . PKG_NAME_LOWER . '/lexicon/',
-	'docs' => $root . 'core/components/' . PKG_NAME_LOWER . '/docs/',
-	'pages' => $root . 'core/components/' . PKG_NAME_LOWER . '/elements/pages/',
-	'templates' => $root . 'core/components/' . PKG_NAME_LOWER . '/templates/',
-	'source_assets' => $root . 'assets/components/' . PKG_NAME_LOWER,
-	'source_core' => $root . 'core/components/' . PKG_NAME_LOWER,
-);
+$sources = [
+    'root' => $root,
+    'build' => $root . '_build/',
+    'data' => $root . '_build/data/',
+    'resolvers' => $root . '_build/resolvers/',
+    'docs' => $root . 'core/components/' . PKG_NAME_LOWER . '/docs/',
+    'plugins' => $root . 'core/components/' . PKG_NAME_LOWER . '/elements/plugins/',
+    'source_core' => $root . 'core/components/' . PKG_NAME_LOWER,
+    'source_assets' => $root . 'assets/components/' . PKG_NAME_LOWER,
+];
 unset($root);
 
-/* override with your own defines here (see build.config.sample.php) */
-require_once $sources['build'] . '/build.config.php';
 require_once MODX_CORE_PATH . 'model/modx/modx.class.php';
-require_once $sources['build'] . '/includes/functions.php';
+require_once $sources['build'] . 'includes/functions.php';
 
 $modx = new modX();
 $modx->initialize('mgr');
-echo '<pre>'; /* used for nice formatting of log messages */
 $modx->setLogLevel(modX::LOG_LEVEL_INFO);
 $modx->setLogTarget('ECHO');
+$modx->getService('error', 'error.modError');
 
-$modx->loadClass('transport.modPackageBuilder', '', false, true);
+echo '<pre>';
+
+/* Dual compat: MODX 2 needs explicit loadClass, MODX 3 autoloads via alias. */
+if (!class_exists('modPackageBuilder')) {
+    if (method_exists($modx, 'loadClass')) {
+        $modx->loadClass('transport.modPackageBuilder', '', false, true);
+    }
+    if (!class_exists('modPackageBuilder') && class_exists('\\MODX\\Revolution\\Transport\\modPackageBuilder')) {
+        class_alias('\\MODX\\Revolution\\Transport\\modPackageBuilder', 'modPackageBuilder');
+    }
+}
+
 $builder = new modPackageBuilder($modx);
 $builder->createPackage(PKG_NAME_LOWER, PKG_VERSION, PKG_RELEASE);
 $builder->registerNamespace(PKG_NAME_LOWER, false, true, '{core_path}components/' . PKG_NAME_LOWER . '/');
@@ -77,113 +84,89 @@ $builder->registerNamespace(PKG_NAME_LOWER, false, true, '{core_path}components/
 $category = $modx->newObject('modCategory');
 $category->set('id', 1);
 $category->set('category', PKG_NAME);
-$modx->log(modX::LOG_LEVEL_INFO, 'Packaged in category.');
-flush();
 
-/* add snippets */
-$snippets = include $sources['data'] . 'transport.snippets.php';
-if (is_array($snippets)) {
-	$category->addMany($snippets, 'Snippets');
-} else {
-	$snippets = array();
-	$modx->log(modX::LOG_LEVEL_ERROR, 'No snippets defined.');
-}
-$modx->log(modX::LOG_LEVEL_INFO, 'Packaged in ' . count($snippets) . ' snippets.');
-flush();
-unset($snippets);
+/* create category vehicle attributes */
+$attr = [
+    xPDOTransport::UNIQUE_KEY => 'category',
+    xPDOTransport::PRESERVE_KEYS => false,
+    xPDOTransport::UPDATE_OBJECT => true,
+    xPDOTransport::RELATED_OBJECTS => true,
+];
 
 /* add plugins */
-$plugins = include $sources['data'] . 'transport.plugins.php';
-if (is_array($plugins)) {
-	$category->addMany($plugins, 'Plugins');
-} else {
-	$plugins = array();
-	$modx->log(modX::LOG_LEVEL_ERROR, 'No plugins defined.');
+if (defined('BUILD_PLUGIN_UPDATE')) {
+    $attr[xPDOTransport::RELATED_OBJECT_ATTRIBUTES]['Plugins'] = [
+        xPDOTransport::PRESERVE_KEYS => false,
+        xPDOTransport::UPDATE_OBJECT => BUILD_PLUGIN_UPDATE,
+        xPDOTransport::UNIQUE_KEY => 'name',
+        xPDOTransport::RELATED_OBJECTS => true,
+        xPDOTransport::RELATED_OBJECT_ATTRIBUTES => [
+            'PluginEvents' => [
+                xPDOTransport::PRESERVE_KEYS => true,
+                xPDOTransport::UPDATE_OBJECT => false,
+                xPDOTransport::UNIQUE_KEY => ['pluginid', 'event'],
+            ],
+        ],
+    ];
+    $plugins = include $sources['data'] . 'transport.plugins.php';
+    if (!is_array($plugins)) {
+        $modx->log(modX::LOG_LEVEL_ERROR, 'Could not package in plugins.');
+    } else {
+        $category->addMany($plugins, 'Plugins');
+        $modx->log(modX::LOG_LEVEL_INFO, 'Packaged in ' . count($plugins) . ' plugins.');
+    }
 }
-$modx->log(modX::LOG_LEVEL_INFO, 'Packaged in ' . count($plugins) . ' plugins.');
-flush();
-unset($plugins);
 
-/* create category vehicle */
-$attr = array(
-	xPDOTransport::UNIQUE_KEY => 'category',
-	xPDOTransport::PRESERVE_KEYS => false,
-	xPDOTransport::UPDATE_OBJECT => true,
-	xPDOTransport::RELATED_OBJECTS => true,
-	xPDOTransport::RELATED_OBJECT_ATTRIBUTES => array(
-		'Snippets' => array(
-			xPDOTransport::UNIQUE_KEY => 'name',
-			xPDOTransport::PRESERVE_KEYS => false,
-			xPDOTransport::UPDATE_OBJECT => true,
-		),
-		'Plugins' => array(
-			xPDOTransport::UNIQUE_KEY => 'name',
-			xPDOTransport::PRESERVE_KEYS => false,
-			xPDOTransport::UPDATE_OBJECT => true,
-			xPDOTransport::RELATED_OBJECTS => true,
-			xPDOTransport::RELATED_OBJECT_ATTRIBUTES => array(
-				'PluginEvents' => array(
-					xPDOTransport::PRESERVE_KEYS => true,
-					xPDOTransport::UPDATE_OBJECT => false,
-					xPDOTransport::UNIQUE_KEY => array('pluginid', 'event'),
-				)
-			)
-		)
-	)
-);
 $vehicle = $builder->createVehicle($category, $attr);
-unset($category, $attr);
 
+/* file resolvers — deploy core and assets folders */
 $modx->log(modX::LOG_LEVEL_INFO, 'Adding file resolvers ...');
-$vehicle->resolve('file', array(
-	'source' => $sources['source_core'],
-	'target' => "return MODX_CORE_PATH . 'components/';"
-));
-$vehicle->resolve('file', array(
-	'source' => $sources['source_assets'],
-	'target' => "return MODX_ASSETS_PATH . 'components/';"
-));
-$modx->log(modX::LOG_LEVEL_INFO, 'Packaged in folders.');
+$vehicle->resolve('file', [
+    'source' => $sources['source_core'],
+    'target' => "return MODX_CORE_PATH . 'components/';",
+]);
+$vehicle->resolve('file', [
+    'source' => $sources['source_assets'],
+    'target' => "return MODX_ASSETS_PATH . 'components/';",
+]);
+
+/* php resolvers — package rename + MIGX dependency check */
+foreach ($BUILD_RESOLVERS as $resolver) {
+    if ($vehicle->resolve('php', ['source' => $sources['resolvers'] . 'resolve.' . $resolver . '.php'])) {
+        $modx->log(modX::LOG_LEVEL_INFO, 'Added resolver "' . $resolver . '" to category.');
+    } else {
+        $modx->log(modX::LOG_LEVEL_INFO, 'Could not add resolver "' . $resolver . '" to category.');
+    }
+}
+
 flush();
 $builder->putVehicle($vehicle);
 
-/* load system settings */
-$settings = include $sources['data'] . 'transport.settings.php';
-if (!is_array($settings)) {
-	$modx->log(modX::LOG_LEVEL_ERROR, 'No settings defined.');
-} else {
-	$attr = array(
-		xPDOTransport::UNIQUE_KEY => 'key',
-		xPDOTransport::PRESERVE_KEYS => true,
-		xPDOTransport::UPDATE_OBJECT => false,
-	);
-	foreach ($settings as $setting) {
-		$vehicle = $builder->createVehicle($setting, $attr);
-		$builder->putVehicle($vehicle);
-	}
-	$modx->log(modX::LOG_LEVEL_INFO, 'Packaged in ' . count($settings) . ' System Settings.');
-}
-unset($settings, $setting, $attr);
-
-/* now pack in the license file, readme and changelog */
+/* package attributes — docs, setup options and dependency requirements */
+$builder->setPackageAttributes([
+    'license' => file_get_contents($sources['docs'] . 'license.txt'),
+    'readme' => file_get_contents($sources['docs'] . 'readme.txt'),
+    'changelog' => file_get_contents($sources['docs'] . 'changelog.txt'),
+    'setup-options' => [
+        'source' => $sources['build'] . 'setup-options.php',
+    ],
+    'requires' => [
+        'php' => '>=7.4.0',
+        'migx' => '>=2.0.0',
+    ],
+]);
 $modx->log(modX::LOG_LEVEL_INFO, 'Added package attributes and setup options.');
-$builder->setPackageAttributes(array(
-	'license' => file_get_contents($sources['docs'] . 'license.txt'),
-	'readme' => file_get_contents($sources['docs'] . 'readme.txt'),
-	'changelog' => file_get_contents($sources['docs'] . 'changelog.txt'),
-));
 
 /* zip up package */
-$modx->log(modX::LOG_LEVEL_INFO, 'Packing up transport package zip ...');
+$modx->log(modX::LOG_LEVEL_INFO, 'Packing up transport package zip...');
 $builder->pack();
 
 $mtime = microtime();
-$mtime = explode(" ", $mtime);
+$mtime = explode(' ', $mtime);
 $mtime = $mtime[1] + $mtime[0];
 $tend = $mtime;
-$totalTime = ($tend - $tstart);
-$totalTime = sprintf("%2.4f s", $totalTime);
+$totalTime = sprintf('%2.4f s', $tend - $tstart);
 
 $modx->log(modX::LOG_LEVEL_INFO, "\n<br />Package Built.<br />\nExecution time: {$totalTime}\n");
 
-exit();
+echo '</pre>';
