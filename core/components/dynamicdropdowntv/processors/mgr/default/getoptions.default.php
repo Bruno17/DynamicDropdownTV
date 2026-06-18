@@ -25,18 +25,25 @@
  */
 $query = $modx->getOption('query', $scriptProperties, '');
 
-$tv = $modx->getObject('modTemplateVar', array('name' => $scriptProperties['tvname']));
+$tv = $modx->getObject('modTemplateVar', array('name' => $scriptProperties['tvname'] ?? ''));
+if (!$tv) {
+	return $this->outputArray(array(), 0);
+}
 $inputProperties = $tv->get('input_properties');
+if (!is_array($inputProperties)) { $inputProperties = array(); }
 
 $modx->lexicon->load('tv_widget', 'dynamicdropdowntv:inputoptions');
 $lang = $modx->lexicon->fetch('dynamicdropdowntv.', TRUE);
 
-$firstText = $modx->getOption('firstText', $inputProperties, $lang['firstText_default'], TRUE);
+$firstText = $modx->getOption('firstText', $inputProperties, isset($lang['firstText_default']) ? $lang['firstText_default'] : '', TRUE);
 $where = $modx->getOption('where', $inputProperties, '');
 
+/* PHP 8: normalize empty scriptProperties to a sentinel so chunk-processed
+ * `where` clauses still resolve. The original code did `$scriptProperty[$key]`
+ * which silently mutated a string index — replaced with proper array write. */
 foreach ($scriptProperties as $key => $scriptProperty) {
-	if ($scriptProperty == '') {
-		$scriptProperty[$key] = '999999999999999';
+	if ($scriptProperty === '' || $scriptProperty === null) {
+		$scriptProperties[$key] = '999999999999999';
 	}
 }
 
@@ -63,10 +70,14 @@ if (!empty($packageName)) {
 $c = $modx->newQuery($classname);
 
 if (!empty($where)) {
-	$c->where($modx->fromJson($where));
+	$decoded = json_decode($where, true);
+	if (is_array($decoded)) {
+		$c->where($decoded);
+	}
 }
 
 $options = array();
+$rows = array();
 $count = 1;
 
 if (!empty($query)) {
@@ -75,13 +86,14 @@ if (!empty($query)) {
 	$options[] = array('id' => '', 'name' => $firstText);
 }
 
-//$c->prepare();die($c->toSql());
-if ($collection = $modx->getIterator($classname, $c)) {
+if ($collection = $modx->getCollection($classname, $c)) {
 	$count += $modx->getCount($classname);
 	foreach ($collection as $object) {
-		$option['id'] = $object->get($idfield);
-		$option['name'] = $object->get($namefield);
-		$rows[strtolower($option['name'])] = $option;
+		$option = array(
+			'id'   => $object->get($idfield),
+			'name' => $object->get($namefield),
+		);
+		$rows[strtolower((string)$option['name'])] = $option;
 	}
 	ksort($rows);
 

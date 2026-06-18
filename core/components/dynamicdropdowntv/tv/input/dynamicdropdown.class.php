@@ -32,6 +32,49 @@ if (!class_exists('DynamicDropdownInputRender')) {
 			return $corePath . 'tv/input/tpl/dynamicdropdown.tpl';
 		}
 
+		/* MODX 3 + MigX compatibility: $modx->controller is not always
+		 * populated when the TV input renderer is invoked from inside
+		 * MigX's "fields" form-builder pipeline (MigX still references
+		 * the MODX 2 `modManagerControllerDeprecated` path which does
+		 * not exist on MODX 3). The base modTemplateVarInputRender
+		 * delegates both setPlaceholder() and fetchTemplate() through
+		 * $this->modx->controller, which then fatals with
+		 * "Call to … on null" and MODX falls back to a plain text input
+		 * (showing the raw numeric ID). We route both through Smarty
+		 * when no controller is available so the dropdown renders
+		 * correctly. This is harmless on MODX 2 where the controller
+		 * is always set.
+		 */
+		public function setPlaceholder($k, $v) {
+			if (isset($this->modx->controller) && is_object($this->modx->controller)) {
+				$this->modx->controller->setPlaceholder($k, $v);
+				return;
+			}
+			if (!isset($this->modx->smarty) || !is_object($this->modx->smarty)) {
+				$this->modx->getService('smarty', 'smarty.modSmarty');
+			}
+			if (isset($this->modx->smarty) && is_object($this->modx->smarty)) {
+				$this->modx->smarty->assign($k, $v);
+			}
+		}
+
+		public function render($value, array $params = array()) {
+			if (isset($this->modx->controller) && is_object($this->modx->controller)) {
+				return parent::render($value, $params);
+			}
+			$this->setPlaceholder('tv', $this->tv);
+			$this->setPlaceholder('id', $this->tv->get('id'));
+			$this->setPlaceholder('ctx', isset($_REQUEST['ctx']) ? $_REQUEST['ctx'] : 'web');
+			$this->setPlaceholder('params', $params);
+			$this->_loadLexiconTopics();
+			$this->process($value, $params);
+			$tpl = $this->getTemplate();
+			if (empty($tpl) || !isset($this->modx->smarty)) {
+				return '';
+			}
+			return $this->modx->smarty->fetch($tpl);
+		}
+
 		public function process($value, array $params = array()) {
 			$corePath = $this->modx->getOption('dynamicdropdowntv.core_path', null, $this->modx->getOption('core_path') . 'components/dynamicdropdowntv/');
 
@@ -46,14 +89,24 @@ if (!class_exists('DynamicDropdownInputRender')) {
 				}
 				$this->setPlaceholder('lang_' . $k, $v);
 			}
+
+			/* PHP 8: defensively normalize optional params before use. */
+			$params = array_merge(array(
+				'group' => '', 'childs' => '', 'parents' => '',
+				'title' => '', 'listWidth' => '', 'maxHeight' => '',
+				'typeAhead' => '', 'typeAheadDelay' => '',
+				'listEmptyText' => '', 'forceSelection' => '',
+				'allowBlank' => '',
+			), $params);
 			$this->setPlaceholder('params', $params);
 
 			$resource = is_object($this->modx->resource) ? $this->modx->resource->toArray() : array();
 
 			$ddId = $this->tv->get('name');
+			$params['group'] = preg_replace('/[^a-zA-Z0-9_\-]/', '', (string) $params['group']);
 			$groupPath = 'mgr/' . $params['group'];
 			$defaultPath = 'mgr/default';
-			$actionPath = file_exists($corePath . 'processors/' . $groupPath) ? $groupPath . '/' : $defaultPath . '/';
+			$actionPath = ($params['group'] !== '' && file_exists($corePath . 'processors/' . $groupPath)) ? $groupPath . '/' : $defaultPath . '/';
 
 			if ($this->tv->get('elements') == '') {
 				$default_processor = 'getoptions.default';
@@ -63,15 +116,23 @@ if (!class_exists('DynamicDropdownInputRender')) {
 				$ddProcessor = 'getelements.' . $ddId;
 			}
 
-			$action = file_exists($corePath . 'processors/' . $actionPath . $ddProcessor . '.php') ? $actionPath . $ddProcessor : $actionPath . $default_processor;
+			/* MODX 3 only loads class-style processors (.class.php).
+			 * MODX 2 prefers legacy (.php) but also accepts .class.php.
+			 * Prefer the class file when present, fall back to legacy. */
+			$override = $corePath . 'processors/' . $actionPath . $ddProcessor;
+			if (file_exists($override . '.class.php') || file_exists($override . '.php')) {
+				$action = $actionPath . $ddProcessor;
+			} else {
+				$action = $actionPath . $default_processor;
+			}
 
 			$this->setPlaceholder('connector_path', "'" . $this->modx->getOption('dynamicdropdowntv.assets_path', NULL, "' + MODx.config.assets_url + 'components/dynamicdropdowntv/") . "connector.php'");
 			$this->setPlaceholder('resource', $resource);
-			$this->setPlaceholder('object_id', $this->modx->getOption('object_id', $_REQUEST, ''));
+			$this->setPlaceholder('object_id', (int) $this->modx->getOption('object_id', $_REQUEST, 0));
 			$this->setPlaceholder('params', $params);
 			$this->setPlaceholder('action', $action);
-			$this->setPlaceholder('children', $this->modx->toJson(explode(',', $params['childs'])));
-			$this->setPlaceholder('parents', $this->modx->toJson(explode(',', $params['parents'])));
+			$this->setPlaceholder('children', json_encode(array_values(array_filter(explode(',', (string)$params['childs']))), JSON_UNESCAPED_SLASHES));
+			$this->setPlaceholder('parents',  json_encode(array_values(array_filter(explode(',', (string)$params['parents']))), JSON_UNESCAPED_SLASHES));
 			$this->setPlaceholder('ddId', $ddId);
 		}
 

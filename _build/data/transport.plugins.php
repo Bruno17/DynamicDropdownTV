@@ -18,29 +18,66 @@
  * DynamicDropdownTV; if not, write to the Free Software Foundation, Inc., 59
  * Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
+ * Dual-compat (MODX 2.x / 3.x) build maintained in this fork by JNogueira.
+ *
+ *
+ * DynamicDropdownTV — transport.plugins.php
+ *
+ * Builds the DynamicDropdownTV plugin object (dual-compat MODX 2.x / 3.x).
+ * The plugin source is read from core/components/dynamicdropdowntv/elements/plugins/.
+ *
  * @package dynamicdropdowntv
  * @subpackage build
- *
- * Package in plugins.
  */
 $plugins = array();
 
-/* create the plugin object */
-$plugins[0] = $modx->newObject('modPlugin');
-$plugins[0]->set('id', 1);
-$plugins[0]->set('name', 'DynamicDropdownTV');
-$plugins[0]->set('description', 'Tell MODX to check these directories for DynamicDropdownTV files and save parents and childrens of DynamicDropdownTVs to the TV options.');
-$plugins[0]->set('plugincode', getSnippetContent($sources['plugins'] . 'dynamicdropdown.plugin.php'));
-$plugins[0]->set('category', 0);
+$tmp = [
+    'DynamicDropdownTV' => [
+        'file' => 'dynamicdropdowntv',
+        'description' => 'Dispatches DynamicDropdownTV input/inputoption render lists and computes parent/child topology on TV save.',
+        'events' => [
+            'OnTVInputRenderList' => 0,
+            'OnTVOutputRenderList' => 0,
+            'OnTVInputPropertiesList' => 0,
+            'OnTVOutputRenderPropertiesList' => 0,
+            'OnTVFormSave' => 0,
+        ],
+    ],
+];
 
-$events = include $sources['events'] . 'dynamicdropdowntv.events.php';
-if (is_array($events) && !empty($events)) {
-	$plugins[0]->addMany($events);
-	$modx->log(xPDO::LOG_LEVEL_INFO, 'Packaged in ' . count($events) . ' Plugin events for DynamicDropdownTV.');
-	flush();
-} else {
-	$modx->log(xPDO::LOG_LEVEL_ERROR, 'Could not find plugin events for DynamicDropdownTV!');
+foreach ($tmp as $k => $v) {
+    /** @var modPlugin $plugin */
+    $plugin = $modx->newObject('modPlugin');
+    /** @noinspection PhpUndefinedVariableInspection */
+    $plugin->fromArray([
+        'name' => $k,
+        'description' => @$v['description'],
+        'plugincode' => getPhpFileContent($sources['source_core'] . '/elements/plugins/' . $v['file'] . '.plugin.php'),
+        'static' => BUILD_PLUGIN_STATIC,
+        'source' => 1,
+        'static_file' => 'core/components/' . PKG_NAME_LOWER . '/elements/plugins/' . $v['file'] . '.plugin.php',
+    ], '', true, true);
+
+    $events = [];
+    if (!empty($v['events']) && is_array($v['events'])) {
+        foreach ($v['events'] as $name => $priority) {
+            /** @var modPluginEvent $event */
+            $event = $modx->newObject('modPluginEvent');
+            $event->fromArray([
+                'event' => $name,
+                'priority' => $priority,
+                'propertyset' => 0,
+            ], '', true, true);
+            $events[] = $event;
+        }
+        unset($v['events']);
+    }
+
+    if (!empty($events)) {
+        $plugin->addMany($events);
+    }
+
+    $plugins[] = $plugin;
 }
-unset($events);
 
 return $plugins;

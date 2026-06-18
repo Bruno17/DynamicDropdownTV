@@ -32,6 +32,39 @@ if (!class_exists('DynamicDropdownMultipleInputRender')) {
 			return $corePath . 'tv/input/tpl/dynamicdropdown_multiple.tpl';
 		}
 
+		/* See dynamicdropdown.class.php for the rationale of this override.
+		 * MODX 3 + MigX may invoke us without $modx->controller; route
+		 * placeholders + template fetch through Smarty in that case. */
+		public function setPlaceholder($k, $v) {
+			if (isset($this->modx->controller) && is_object($this->modx->controller)) {
+				$this->modx->controller->setPlaceholder($k, $v);
+				return;
+			}
+			if (!isset($this->modx->smarty) || !is_object($this->modx->smarty)) {
+				$this->modx->getService('smarty', 'smarty.modSmarty');
+			}
+			if (isset($this->modx->smarty) && is_object($this->modx->smarty)) {
+				$this->modx->smarty->assign($k, $v);
+			}
+		}
+
+		public function render($value, array $params = array()) {
+			if (isset($this->modx->controller) && is_object($this->modx->controller)) {
+				return parent::render($value, $params);
+			}
+			$this->setPlaceholder('tv', $this->tv);
+			$this->setPlaceholder('id', $this->tv->get('id'));
+			$this->setPlaceholder('ctx', isset($_REQUEST['ctx']) ? $_REQUEST['ctx'] : 'web');
+			$this->setPlaceholder('params', $params);
+			$this->_loadLexiconTopics();
+			$this->process($value, $params);
+			$tpl = $this->getTemplate();
+			if (empty($tpl) || !isset($this->modx->smarty)) {
+				return '';
+			}
+			return $this->modx->smarty->fetch($tpl);
+		}
+
 		public function process($value, array $params = array()) {
 			$corePath = $this->modx->getOption('dynamicdropdowntv.core_path', null, $this->modx->getOption('core_path') . 'components/dynamicdropdowntv/');
 
@@ -46,6 +79,16 @@ if (!class_exists('DynamicDropdownMultipleInputRender')) {
 				}
 				$this->setPlaceholder('lang_' . $k, $v);
 			}
+
+			/* PHP 8: defensively normalize optional params before use. */
+			$params = array_merge(array(
+				'group' => '', 'childs' => '', 'parents' => '',
+				'title' => '', 'listWidth' => '', 'maxHeight' => '',
+				'typeAhead' => '', 'typeAheadDelay' => '',
+				'listEmptyText' => '', 'forceSelection' => '',
+				'allowBlank' => '', 'valueDelimiter' => '',
+				'clearOnRefresh' => '',
+			), $params);
 			$this->setPlaceholder('params', $params);
 
 			$resource = is_object($this->modx->resource) ? $this->modx->resource->toArray() : array();
@@ -53,7 +96,7 @@ if (!class_exists('DynamicDropdownMultipleInputRender')) {
 			$ddId = $this->tv->get('name');
 			$groupPath = 'mgr/' . $params['group'];
 			$defaultPath = 'mgr/default';
-			$actionPath = file_exists($corePath . 'processors/' . $groupPath) ? $groupPath . '/' : $defaultPath . '/';
+			$actionPath = ($params['group'] !== '' && file_exists($corePath . 'processors/' . $groupPath)) ? $groupPath . '/' : $defaultPath . '/';
 
 			if ($this->tv->get('elements') == '') {
 				$default_processor = 'getoptions.default';
@@ -63,15 +106,20 @@ if (!class_exists('DynamicDropdownMultipleInputRender')) {
 				$ddProcessor = 'getelements.' . $ddId;
 			}
 
-			$action = file_exists($corePath . 'processors/' . $actionPath . $ddProcessor . '.php') ? $actionPath . $ddProcessor : $actionPath . $default_processor;
+			$override = $corePath . 'processors/' . $actionPath . $ddProcessor;
+			if (file_exists($override . '.class.php') || file_exists($override . '.php')) {
+				$action = $actionPath . $ddProcessor;
+			} else {
+				$action = $actionPath . $default_processor;
+			}
 
 			$this->setPlaceholder('connector_path', "'" . $this->modx->getOption('dynamicdropdowntv.assets_path', NULL, "' + MODx.config.assets_url + 'components/dynamicdropdowntv/") . "connector.php'");
 			$this->setPlaceholder('resource', $resource);
 			$this->setPlaceholder('object_id', $this->modx->getOption('object_id', $_REQUEST, ''));
 			$this->setPlaceholder('params', $params);
 			$this->setPlaceholder('action', $action);
-			$this->setPlaceholder('children', $this->modx->toJson(explode(',', $params['childs'])));
-			$this->setPlaceholder('parents', $this->modx->toJson(explode(',', $params['parents'])));
+			$this->setPlaceholder('children', json_encode(array_values(array_filter(explode(',', (string)$params['childs']))), JSON_UNESCAPED_SLASHES));
+			$this->setPlaceholder('parents',  json_encode(array_values(array_filter(explode(',', (string)$params['parents']))), JSON_UNESCAPED_SLASHES));
 			$this->setPlaceholder('ddId', $ddId);
 		}
 

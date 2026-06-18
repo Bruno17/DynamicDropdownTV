@@ -29,15 +29,22 @@ $lang = $modx->lexicon->fetch('dynamicdropdowntv.', true);
 // get list of dynamic dropdown template variables to select parent dropdown
 $c = $modx->newQuery('modTemplateVar');
 $c->where(array('type:LIKE' => 'dynamicdropdown%'));
+$currentTv = isset($_REQUEST['tv']) ? (int)$_REQUEST['tv'] : 0;
+$list = array();
 $list[] = array('', $lang['noParent']);
 if ($collection = $modx->getCollection('modTemplateVar', $c)) {
 	foreach ($collection as $object) {
-		if ($_REQUEST['tv'] != $object->get('id')) {
+		if ($currentTv != (int)$object->get('id')) {
 			$list[] = array($object->get('name'), $object->get('name'));
 		}
 	}
 }
 $list = json_encode($list);
+
+/* PHP 8: guard against $modx->smarty being null (e.g. CLI or headless context) */
+if (!isset($modx->smarty) || !$modx->smarty) {
+	return '';
+}
 
 $modx->smarty->assign('tvlist', $list);
 $modx->smarty->assign('dynamicdropdowntv', $lang);

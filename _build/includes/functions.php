@@ -18,15 +18,16 @@
  * DynamicDropdownTV; if not, write to the Free Software Foundation, Inc., 59
  * Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
- * @package dynamicdropdowntv
- * @subpackage build
+ * Dual-compat (MODX 2.x / 3.x) build maintained in this fork by JNogueira.
  *
- * Functions for building
+ *
+ * @param $filename
+ * @return string
  */
-function getSnippetContent($filename) {
-    $o = file_get_contents($filename);
-    $o = str_replace('<?php','',$o);
-    $o = str_replace('?>','',$o);
-    $o = trim($o);
-    return $o;
+function getPhpFileContent($filename)
+{
+    $file = trim(file_get_contents($filename));
+    preg_match('#\<\?php(.*)#is', $file, $data);
+
+    return rtrim(rtrim(trim($data[1]), '?>'));
 }

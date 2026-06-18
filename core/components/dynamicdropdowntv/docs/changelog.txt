@@ -1,14 +1,47 @@
-Changelog
-================================================================================
+DynamicDropdownTV — Changelog
+=============================
 
-- 1.2
-    - Checked/rewritten documentation
-    - Checked/rewritten examples
-    - Reviewed/changed tv properties
-    - Added processor for input option values
+1.4.0 — Forked by João Nogueira from the original release from Bruno Perner
+-------------------------------------------------------------------------
+- MODX 3 from-scratch processor refactor. Convert the include-style
+  getoptions.default.php and getelements.default.php to class-based
+  processors (*.class.php) extending modProcessor. MODX 3 only loads
+  class-style processors via its action lookup, so the legacy include
+  files produced "Requested processor not found" on every dropdown
+  options fetch when editing a record. Legacy .php files are kept in
+  place so existing direct references continue to work on MODX 2.
+- Processor-level permission gate: explicit checkPermissions() requiring
+  an authenticated manager session, in addition to the existing
+  defense-in-depth check in connector.php.
+- Input render: per-TV override processor lookup now prefers .class.php
+  and falls back to legacy .php, so existing custom override processors
+  shipped with the package keep working on MODX 2 and can be upgraded to
+  class style for MODX 3.
+- MigX-on-MODX-3 dropdown fix: When the DDTV input renderer was invoked
+  from inside MigX form-builder pipeline on MODX 3, $modx->controller
+  was null. The DDTV input render classes now route placeholders and
+  template fetching through $modx->smarty when the controller is
+  unavailable.
+- Critical plugin-cache fix: The build script was shipping the plugin
+  source with its opening <?php tag still in place causing a fatal parse
+  error in the cached plugin include. The build now strips the leading
+  <?php before persisting the plugincode column.
+- PHP 8.x compatibility: every undefined-array-key access path was
+  guarded, the inverted count() parenthesis bug in OnTVFormSave was
+  fixed, and the $scriptProperty[$key] mutation bug in the default
+  getoptions processor was rewritten.
+- MODX 3 compatibility: replaced the removed $modx->toJson() /
+  $modx->fromJson() calls with json_encode() / json_decode() and
+  swapped the deprecated Ext.util.JSON.decode for Ext.decode in the
+  ExtJS templates.
+- Security: the asset connector now requires an authenticated manager
+  session before dispatching the request. XSS fixes (object_id cast,
+  TPL escaping), template injection sanitization, path traversal
+  prevention on group parameter.
+- UX/JS: fixed global variable leaks in for loops, fixed store.baseParams
+  sync in multi-select cascading, added AJAX error handling.
+- Verified end-to-end on MODX 2.8.8 and MODX 3.2.1 (PHP 8.5).
 
-- 1.1
-    - Added dynamicdropdown_multiple for multiple select options
-
-- 1.0
-    - Initial public release
+1.3.0
+-----
+- Original release line by Bruno Perner.
